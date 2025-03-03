@@ -110,66 +110,83 @@ template <typename T>
 List1D<T>::List1D()
 {
     // TODO
+    pList = new XArrayList<T>();
 }
 
 template <typename T>
 List1D<T>::List1D(int num_elements)
 {
     // TODO
+    pList = new XArrayList<T>();
+
+    for(int i = 0; i<num_elements; i++)
+        pList->add(T());
 }
 
 template <typename T>
 List1D<T>::List1D(const T *array, int num_elements)
 {
     // TODO
+    pList = new XArrayList<T>();
+
+    for(int i = 0; i<num_elements; i++)
+        pList->add(array[i]);
 }
 
 template <typename T>
 List1D<T>::List1D(const List1D<T> &other)
 {
     // TODO
+    pList = new XArrayList<T>(*static_cast<XArrayList<T>*>(other.pList));
 }
 
 template <typename T>
 List1D<T>::~List1D()
 {
     // TODO
+    delete pList;
 }
 
 template <typename T>
 int List1D<T>::size() const
 {
     // TODO
+    return pList->size();
 }
 
 template <typename T>
 T List1D<T>::get(int index) const
 {
     // TODO
+    return pList->get(index);
 }
 
 template <typename T>
 void List1D<T>::set(int index, T value)
 {
     // TODO
+    pList->get(index)=value;
 }
 
 template <typename T>
 void List1D<T>::add(const T &value)
 {
     // TODO
+    pList->add(value);
 }
 
 template <typename T>
 string List1D<T>::toString() const
 {
     // TODO
+    return pList->toString();
 }
 
 template <typename T>
 ostream &operator<<(ostream &os, const List1D<T> &list)
 {
     // TODO
+    os << list.toString();
     return os;
 }
 
@@ -178,60 +195,125 @@ template <typename T>
 List2D<T>::List2D()
 {
     // TODO
+    pMatrix = new XArrayList<IList<T>*>();
 }
 
 template <typename T>
 List2D<T>::List2D(List1D<T> *array, int num_rows)
 {
     // TODO
+    pMatrix = new XArrayList<IList<T>*>();
+
+    for (int i = 0; i < num_rows; i++)
+        pMatrix->add(static_cast<IList<T>*>(&array[i]));
 }
 
 template <typename T>
 List2D<T>::List2D(const List2D<T> &other)
 {
     // TODO
+    pMatrix = new XArrayList<IList<T>*>();
+
+    int rows = other.rows();
+
+    for (int i = 0; i < rows; i++) {
+        IList<T>* originalRow = other.pMatrix->get(i);
+        
+        List1D<T>* newRow = new List1D<T>( *static_cast<List1D<T>*>(originalRow) );
+        
+        pMatrix->add(newRow);
+    }
 }
 
 template <typename T>
 List2D<T>::~List2D()
 {
     // TODO
+    if (pMatrix != nullptr)
+    {
+        int numRows = pMatrix->size();
+        for (int i = 0; i < numRows; i++)
+        {
+            delete pMatrix->get(i);
+        }
+        delete pMatrix;
+        pMatrix = nullptr;
+    }
 }
 
 template <typename T>
 int List2D<T>::rows() const
 {
     // TODO
+    return pMatrix->size();
 }
 
 template <typename T>
 void List2D<T>::setRow(int rowIndex, const List1D<T> &row)
 {
     // TODO
+    if (rowIndex < 0 || rowIndex >= pMatrix->size())
+        throw std::out_of_range("Row index is out of range!");
+    
+    IList<T>* oldRow = pMatrix->removeAt(rowIndex);
+    delete static_cast<List1D<T>*>(oldRow);
+
+    List1D<T>* newRow = new List1D<T>(row);
+
+    pMatrix->add(rowIndex, newRow);
 }
 
 template <typename T>
 T List2D<T>::get(int rowIndex, int colIndex) const
 {
     // TODO
+    if (rowIndex < 0 || rowIndex >= pMatrix->size())
+        throw std::out_of_range("Row index is out of range!");
+    
+    IList<T>* row = pMatrix->get(rowIndex);
+    
+    List1D<T>* listRow = static_cast<List1D<T>*>(row);
+    
+    return listRow->get(colIndex);
 }
 
 template <typename T>
 List1D<T> List2D<T>::getRow(int rowIndex) const
 {
     // TODO
+    if (rowIndex < 0 || rowIndex >= pMatrix->size())
+        throw std::out_of_range("Row index is out of range!");
+    
+    IList<T>* rowPtr = pMatrix->get(rowIndex);
+    
+    List1D<T>* listRow = static_cast<List1D<T>*>(rowPtr);
+    
+    return *listRow;
 }
 
 template <typename T>
 string List2D<T>::toString() const
 {
     // TODO
+    ostringstream oss;
+    oss << "[";
+    int numRows = pMatrix->size();
+    for (int i = 0; i < numRows; i++) {
+        IList<T>* row = pMatrix->get(i);
+        List1D<T>* listRow = static_cast<List1D<T>*>(row);
+        oss << listRow->toString();
+        if (i != numRows - 1)
+            oss << ", ";
+    }
+    oss << "]";
+    return oss.str();
 }
 
 template <typename T>
 ostream &operator<<(ostream &os, const List2D<T> &matrix)
 {
     // TODO
+    os << matrix.toString();
     return os;
 }
 
