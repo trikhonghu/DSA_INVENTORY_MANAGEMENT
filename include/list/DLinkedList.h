@@ -371,7 +371,7 @@ typename DLinkedList<T>::Node *DLinkedList<T>::getPreviousNodeOf(int index)
         return curr;
     }else{
         Node *curr = tail;
-        for(int i = count+1; i > index)
+        for(int i = count+1; i > index; i--)
             curr = curr->prev;
         return curr;
     }
