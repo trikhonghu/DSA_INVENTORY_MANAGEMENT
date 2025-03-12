@@ -21,11 +21,9 @@ struct InventoryAttribute {
     // Constructor mặc định
     InventoryAttribute() : name(""), value(0.0) {}
     InventoryAttribute(const string &name, double value) : name(name), value(value) {}
-    // Toán tử so sánh: so sánh cả tên và giá trị (với sai số nhỏ)
     bool operator==(const InventoryAttribute &other) const {
         return name == other.name && fabs(value - other.value) < 1E-8;
     }
-    // Chuyển đổi thành chuỗi với fixed, setprecision(6)
     string toString() const {
         ostringstream oss;
         oss << name << ": " << fixed << setprecision(6) << value;
@@ -42,7 +40,6 @@ inline ostream &operator<<(ostream &os, const InventoryAttribute &attr) {
 template <typename T>
 class List1D {
 private:
-    // Sử dụng XArrayList làm container cơ sở
     IList<T>* pList;
 public:
     List1D() {
@@ -70,7 +67,7 @@ public:
         else
             throw logic_error("List1D copy: underlying list not of type XArrayList");
     }
-    // Copy assignment operator (deep copy)
+
     List1D<T>& operator=(const List1D<T>& other) {
         if(this == &other)
             return *this;
@@ -101,7 +98,7 @@ public:
     void add(const T &value) {
         pList->add(value);
     }
-    // Hàm removeAt để xoá phần tử tại vị trí index
+
     void removeAt(int index) {
         if(index < 0 || index >= size())
             throw out_of_range("Index is invalid!");
@@ -120,13 +117,12 @@ public:
 template <typename T>
 class List2D {
 private:
-    // Container chứa con trỏ đến các đối tượng List1D<T>
     IList< List1D<T>* >* pMatrix;
 public:
     List2D() {
         pMatrix = new XArrayList< List1D<T>* >(nullptr, nullptr, 10);
     }
-    // Khởi tạo từ mảng các List1D (sao chép từng hàng)
+
     List2D(List1D<T>* array, int num_rows) {
         int cap = (num_rows > 10 ? num_rows : 10);
         pMatrix = new XArrayList< List1D<T>* >(nullptr, nullptr, cap);
@@ -134,7 +130,7 @@ public:
             pMatrix->add(new List1D<T>(array[i]));
         }
     }
-    // Copy constructor (sao chép sâu)
+
     List2D(const List2D<T>& other) {
         int r = other.rows();
         pMatrix = new XArrayList< List1D<T>* >(nullptr, nullptr, (r > 10 ? r : 10));
@@ -142,11 +138,11 @@ public:
             pMatrix->add(new List1D<T>(*(other.pMatrix->get(i))));
         }
     }
-    // Copy assignment operator (deep copy)
+
     List2D<T>& operator=(const List2D<T>& other) {
         if(this == &other)
             return *this;
-        // Xoá các phần tử hiện tại
+
         int r = rows();
         for (int i = 0; i < r; i++) {
             delete pMatrix->get(i);
@@ -169,24 +165,24 @@ public:
     int rows() const {
         return pMatrix->size();
     }
-    // Thêm một hàng mới vào cuối
+
     void addRow(List1D<T>* row) {
         pMatrix->add(row);
     }
-    // Xoá hàng tại vị trí rowIndex và trả về con trỏ đã xoá
+
     List1D<T>* removeRow(int rowIndex) {
         if(rowIndex < 0 || rowIndex >= rows())
             throw out_of_range("Index is invalid!");
         return pMatrix->removeAt(rowIndex);
     }
-    // setRow: thay thế hàng cũ tại rowIndex bằng bản sao của hàng mới.
+
     void setRow(int rowIndex, const List1D<T>& row) {
         if(rowIndex < 0 || rowIndex >= rows())
             throw out_of_range("Index is invalid!");
         delete pMatrix->removeAt(rowIndex);
         pMatrix->add(rowIndex, new List1D<T>(row));
     }
-    // Lấy giá trị tại (rowIndex, colIndex)
+
     T get(int rowIndex, int colIndex) const {
         if(rowIndex < 0 || rowIndex >= rows())
             throw out_of_range("Index is invalid!");
@@ -195,7 +191,7 @@ public:
             throw out_of_range("Index is invalid!");
         return row->get(colIndex);
     }
-    // Lấy hàng tại vị trí rowIndex (trả về bản sao)
+
     List1D<T> getRow(int rowIndex) const {
         if(rowIndex < 0 || rowIndex >= rows())
             throw out_of_range("Index is invalid!");
@@ -227,7 +223,7 @@ private:
     List1D<int> quantities;
 public:
     InventoryManager() {
-        // Khởi tạo rỗng
+
     }
     InventoryManager(const List2D<InventoryAttribute>& matrix,
                      const List1D<string>& names,
@@ -240,7 +236,7 @@ public:
     int size() const {
         return productNames.size();
     }
-    // Lấy danh sách thuộc tính của sản phẩm tại index (bản sao)
+
     List1D<InventoryAttribute> getProductAttributes(int index) const {
         if(index < 0 || index >= size())
             throw out_of_range("Index is invalid!");
@@ -261,7 +257,7 @@ public:
             throw out_of_range("Index is invalid!");
         quantities.set(index, newQuantity);
     }
-    // Thêm sản phẩm mới vào cuối danh mục
+
     void addProduct(const List1D<InventoryAttribute>& attributes, const string& name, int quantity) {
         List1D<InventoryAttribute>* newRow = new List1D<InventoryAttribute>(attributes);
         attributesMatrix.addRow(newRow);
@@ -276,9 +272,7 @@ public:
         productNames.removeAt(index);
         quantities.removeAt(index);
     }
-    // query: lọc sản phẩm thỏa điều kiện.
-    // Nếu ascending == false, giữ thứ tự ban đầu của các sản phẩm thỏa điều kiện.
-    // Nếu ascending == true, sắp xếp theo attribute value tăng dần.
+
     List1D<string> query(int attributeIndex, const double &minValue,
                          const double &maxValue, int minQuantity, bool ascending) const {
         List1D<string> result;
@@ -302,7 +296,7 @@ public:
             result.add(p.second);
         return result;
     }
-    // removeDuplicates: giữ lại sản phẩm đầu tiên với tổng số lượng của các sản phẩm trùng.
+
     void removeDuplicates() {
         int n = size();
         for (int i = 0; i < n; i++) {
@@ -331,7 +325,7 @@ public:
             }
         }
     }
-    // merge: nối hai danh mục tồn kho thành một danh mục mới
+
     static InventoryManager merge(const InventoryManager &inv1,
                                   const InventoryManager &inv2) {
         InventoryManager merged(inv1);
@@ -343,7 +337,7 @@ public:
         }
         return merged;
     }
-    // split: tách danh mục tồn kho thành 2 phần theo tỷ lệ: phần 1 chứa ceil(n * ratio) sản phẩm
+
     void split(InventoryManager &section1,
                InventoryManager &section2,
                double ratio) const {
@@ -367,7 +361,7 @@ public:
     List1D<int> getQuantities() const {
         return quantities;
     }
-    // toString: định dạng chuỗi in ra theo mẫu yêu cầu
+
     string toString() const {
         ostringstream oss;
         oss << "InventoryManager[\n";
